@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspection Form</title>
+<style>
+.custom-toast {
+  display: none;
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #2ecc71;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
+}
+@keyframes fadeIn {
+  from { top: 0px; opacity: 0; }
+  to { top: 20px; opacity: 1; }
+}
+body {
+  font-family: Arial, sans-serif;
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+  background-color: #e8f0fe;
+  color: #333;
+  font-size: 30px; 
+}
+h2 {
+  color: #2c3e50;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+  font-size: 35px;
+}
+.row {
+  margin-bottom: 20px;
+}
+label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8px;
+  font-size: 33px;
+}
+
+/* ĐÃ SỬA: Đổi màu chữ của tất cả các ô nhập văn bản thành màu xanh dương nhạt */
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 30px;
+  color: #3498db !important; /* Màu xanh dương nhạt */
+  font-weight: bold;
+}
+
+.custom-select2-alternative {
+  position: relative;
+  width: 100%;
+}
+.dropdown-trigger {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  min-height: 55px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 30px;
+  color: #333 !important; /* Giữ màu chữ dropdown đen thông thường */
+}
+.dropdown-trigger:after {
+  content: "▼";
+  font-size: 16px;
+  color: #999;
+}
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 500px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  padding: 15px;
+  box-sizing: border-box;
+}
+.search-box-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.dropdown-search {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  box-sizing: border-box;
+  font-size: 30px;
+  color: #333 !important;
+}
+.btn-add-tag {
+  padding: 6px 15px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+.checkbox-options {
+  max-height: 320px;
+  overflow-y: auto;
+}
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 6px;
+  cursor: pointer;
+  font-size: 26px;
+  color: #333 !important;
+}
+.checkbox-item:hover {
+  background-color: #f5f5f5;
+}
+.checkbox-item input {
+  margin-right: 12px;
+  transform: scale(1.8);
+  cursor: pointer;
+}
+.card {
+  border: 1px solid #b0cbdc;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+}
+.card-title {
+  font-size: 30px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #34495e;
+}
+.photo-input-item {
+  margin-bottom: 12px;
+}
+.preview-wrapper {
+  display: inline-block;
+  position: relative;
+  margin-top: 10px;
+  margin-right: 15px;
+  margin-bottom: 15px;
+}
+.preview-img-new {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+.preview-wrapper-new {
+  display: inline-block;
+  position: relative;
+  margin-top: 10px;
+  margin-right: 15px;
+  margin-bottom: 15px;
+}
+.btn-remove-img {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.btn {
+  padding: 15px 30px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 26px;
+}
+.btn-primary {
+  background-color: #3498db;
+  color: white;
+}
+.btn-primary:hover {
+  background-color: #2980b9;
+}
+.btn-success {
+  background-color: #2ecc71;
+  color: white;
+}
+.btn-success:hover {
+  background-color: #27ae60;
+}
+
+/* CẤU TRÚC GRID HÀNG NGANG CHỐNG VỠ */
+.inspection-grid-row {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 15px;
+}
+.grid-col-number {
+  width: 160px;
+  flex-shrink: 0;
+}
+.grid-col-lookup {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ĐÃ SỬA: Vùng đỏ tra cứu chữ màu ĐEN và IN NGHIÊNG */
+.lookup-result-text {
+  width: 100%;
+  color: #000000 !important; /* Chữ màu đen */
+  font-style: italic;        /* Chữ in nghiêng */
+  font-weight: normal;
+  font-size: 26px;
+  padding: 10px;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  background-color: #fdf2f2;
+  box-sizing: border-box;
+  min-height: 55px;
+  display: flex;
+  align-items: center;
+  word-break: break-word;
+}
+
+/* ĐÃ SỬA: Loại bỏ dòng chữ "No file chosen" trên mọi trình duyệt */
+.photos.form-control {
+  color: transparent !important;
+}
+.photos.form-control::file-selector-button {
+  color: #333;
+  padding: 5px 15px;
+  background: #f1f1f1;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 24px;
+}
+
+@media(max-width:768px){
+  body { padding: 10px; }
+  .inspection-grid-row { flex-direction: column; gap: 10px; }
+  .grid-col-number { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<h2>Inspection Form</h2>
+<div id="toastMessage" class="custom-toast"></div>
+
+<div class="row">
+  <label>Room (Location)</label>
+  <div class="custom-select2-alternative" id="locDropdownContainer">
+    <div class="dropdown-trigger" id="locTrigger">Select Location</div>
+    <div class="dropdown-menu" id="locDropdownMenu">
+      <div class="search-box-container">
+        <input type="text" class="dropdown-search" id="locSearch" placeholder="Search or add room...">
+        <button type="button" class="btn-add-tag" onclick="addNewLocTag()">+ Add New</button>
+      </div>
+      <div class="checkbox-options" id="locOptions"></div>
+    </div>
+  </div>
+</div>
+
+<div id="cardsContainer"></div>
+<br>
+<button type="button" class="btn btn-primary" onclick="addCard()">+ Add New Number</button>
+<br><br>
+<button type="button" class="btn btn-success" onclick="submitForm()">Submit</button>
+<script>
+let originalCards = [];
+let allLocsData = [];
+
+window.addEventListener('load', function() {
+  document.addEventListener("click", function(e) {
+    if (!e.target.closest(".custom-select2-alternative")) {
+      document.querySelectorAll(".dropdown-menu").forEach(m => m.style.display = "none");
+    }
+  });
+
+  const locTrigger = document.getElementById("locTrigger");
+  const locDropdownMenu = document.getElementById("locDropdownMenu");
+  if (locTrigger) {
+    locTrigger.addEventListener("click", function(e) {
+      e.stopPropagation();
+      const currentDisplay = locDropdownMenu.style.display;
+      document.querySelectorAll(".dropdown-menu").forEach(m => m.style.display = "none");
+      locDropdownMenu.style.display = currentDisplay === "block" ? "none" : "block";
+    });
+  }
+
+  const locSearch = document.getElementById("locSearch");
+  if (locSearch) {
+    locSearch.addEventListener("input", function() {
+      const val = this.value.toLowerCase();
+      document.querySelectorAll("#locOptions .checkbox-item").forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.indexOf(val) > -1 ? "flex" : "none";
+      });
+    });
+  }
+
+  document.addEventListener("change", function(e) {
+    if (e.target.matches("#locOptions input[type='checkbox']")) {
+      updateTriggerText(document.getElementById("locTrigger"), document.getElementById("locOptions"), "Select Location");
+      loadCardsFromServer();
+    }
+  });
+
+  google.script.run.withSuccessHandler(function(initData) {
+    if (initData) {
+      allLocsData = initData.locations || [];
+      const locOpts = document.getElementById("locOptions");
+      renderCheckboxOptions(locOpts, allLocsData, [], "loc_chk");
+      updateTriggerText(document.getElementById("locTrigger"), locOpts, "Select Location");
+    }
+  }).getInitData();
+});
+
+function updateTriggerText(triggerEl, optionsContainer, labelText) {
+  if (!triggerEl || !optionsContainer) return;
+  const checked = [];
+  optionsContainer.querySelectorAll("input:checked").forEach(cb => checked.push(cb.value));
+  if (checked.length === 0) {
+    triggerEl.textContent = labelText; 
+  } else if (checked.length <= 2) {
+    triggerEl.textContent = checked.join(", ");
+  } else {
+    triggerEl.textContent = checked.length + " locations selected";
+  }
+}
+
+function renderCheckboxOptions(container, items, checkedList, namePrefix) {
+  if (!container) return;
+  let html = "";
+  const lowerChecked = checkedList.map(v => String(v).trim().toLowerCase());
+  
+  items.forEach((item, index) => {
+    const isChecked = lowerChecked.includes(String(item).trim().toLowerCase()) ? "checked" : "";
+    const id = namePrefix + "_" + index + "_" + Date.now();
+    html += `
+      <div class="checkbox-item">
+        <input type="checkbox" value="${item}" id="${id}" ${isChecked}>
+        <label style="display:inline; font-size:26px; font-weight:normal; margin:0;" for="${id}">${item}</label>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+function addNewLocTag() {
+  const inp = document.getElementById("locSearch");
+  const val = inp.value.trim();
+  if (!val) return;
+  
+  if (!isNaN(val.charAt(0))) {
+    alert("⚠️ Tên Room không được phép bắt đầu bằng ký tự số!");
+    return;
+  }
+
+  if (!allLocsData.some(v => v.toLowerCase() === val.toLowerCase())) {
+    allLocsData.push(val);
+    allLocsData.sort((a,b) => a.localeCompare(b));
+  }
+  const currentChecked = [];
+  document.querySelectorAll("#locOptions input:checked").forEach(cb => currentChecked.push(cb.value));
+  if (!currentChecked.includes(val)) currentChecked.push(val);
+  
+  renderCheckboxOptions(document.getElementById("locOptions"), allLocsData, currentChecked, "loc_chk");
+  updateTriggerText(document.getElementById("locTrigger"), document.getElementById("locOptions"), "Select Location");
+  inp.value = "";
+  document.querySelectorAll("#locOptions .checkbox-item").forEach(item => item.style.display = "flex");
+  loadCardsFromServer();
+}
+
+function loadCardsFromServer() {
+  const selectedLocations = [];
+  document.querySelectorAll("#locOptions input:checked").forEach(cb => selectedLocations.push(cb.value));
+
+  if (selectedLocations.length === 0) {
+    document.getElementById("cardsContainer").innerHTML = "";
+    originalCards = [];
+    return;
+  }
+
+  document.getElementById("cardsContainer").innerHTML = "<div style='font-size:26px;color:#666;padding:10px;'>⏳ Đang tải danh sách thẻ...</div>";
+
+  google.script.run.withSuccessHandler(function(cards) {
+    originalCards = cards || [];
+    const container = document.getElementById("cardsContainer");
+    container.innerHTML = "";
+    originalCards.forEach(card => createCard(card));
+  }).getCards(selectedLocations);
+}
+function createCard(card) {
+  const container = document.getElementById("cardsContainer");
+  const id = "card_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+  const isNew = !card.number;
+
+  const html = `
+  <div class="card" data-id="${id}" data-isnew="${isNew}">
+    <div class="card-title">${isNew ? "New Entry" : "Inspection Details"}</div>
+    
+    <div class="inspection-grid-row">
+      <div class="grid-col-number">
+        <label>Number</label>
+        <input type="text" class="number form-control" 
+               value="${card.number || ''}" ${isNew ? '' : 'readonly'} 
+               placeholder="Số..." 
+               oninput="handleNumberLookup(this, '${id}')" style="text-align: center;">
+      </div>
+      <div class="grid-col-lookup">
+        <label>Description Details</label>
+        <div class="lookup-result-text" id="lookup_${id}">Nhập số để tra cứu...</div>
+      </div>
+    </div>
+    
+    <label>Reality check / Thông số đo được</label>
+    <input type="text" class="reality-check form-control" value="${card.realityCheck || ''}" placeholder="Nhập thông số thực tế...">
+    <br>
+    
+    <label>Comments</label>
+    <input type="text" class="comments form-control" value="${card.comments || ''}" placeholder="Nhập ghi chú hoặc ý kiến...">
+    <br>
+    
+    <label>Pictures (Chỉ tải lên ảnh mới bổ sung)</label>
+    <div class="photos-container-list"></div>
+    <div class="preview-container-gallery" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 15px;"></div>
+  </div>
+  `;
+  container.insertAdjacentHTML("beforeend", html);
+  
+  if (card.imageUrls && card.imageUrls.length > 0) {
+    const gallery = document.querySelector('[data-id="' + id + '"] .preview-container-gallery');
+    card.imageUrls.forEach((url, index) => {
+      if (!url.trim()) return;
+      const wrapper = document.createElement("div");
+      wrapper.className = "preview-wrapper existing-image";
+      wrapper.style.position = "relative";
+      wrapper.style.display = "inline-block";
+      
+      const link = document.createElement("a");
+      link.href = url.trim().replace("thumbnail?sz=w500&id=", "open?id=");
+      link.target = "_blank";
+      
+      const imgElement = document.createElement("img");
+      imgElement.className = "preview-img-new";
+      imgElement.src = url.trim();
+      imgElement.style.width = "150px";
+      imgElement.style.height = "150px";
+      imgElement.style.objectFit = "cover";
+      imgElement.style.borderRadius = "8px";
+      imgElement.style.border = "3px solid #1a73e8";
+      
+      link.appendChild(imgElement);
+      wrapper.appendChild(link);
+      gallery.appendChild(wrapper);
+    });
+  }
+
+  appendNewFileInputBox(id);
+
+  if (!isNew && card.number) {
+    const inputEl = document.querySelector('[data-id="' + id + '"] .number');
+    handleNumberLookup(inputEl, id);
+  }
+}
+
+function handleNumberLookup(inputElement, cardId) {
+  const value = inputElement.value.trim();
+  const resultDisplay = document.getElementById("lookup_" + cardId);
+  
+  if (!value) {
+    resultDisplay.textContent = "Nhập số để tra cứu...";
+    return;
+  }
+  
+  const selectedLocations = [];
+  document.querySelectorAll("#locOptions input:checked").forEach(cb => { selectedLocations.push(cb.value); });
+  const currentLocation = selectedLocations.length > 0 ? selectedLocations[0] : "";
+  
+  if (!currentLocation) {
+    resultDisplay.textContent = "⚠️ Hãy tích chọn Room (Location) phía trên trước!";
+    return;
+  }
+  
+  resultDisplay.textContent = "🔍 Đang tìm...";
+  
+  google.script.run.withSuccessHandler(function(responseText) {
+    resultDisplay.textContent = responseText || "⚠️ Trống dữ liệu";
+  }).lookupDescriptionByNumber(value, currentLocation);
+}
+
+function appendNewFileInputBox(cardId) {
+  const cardDiv = document.querySelector('[data-id="' + cardId + '"]');
+  const container = cardDiv.querySelector(".photos-container-list");
+  const inputId = "img_inp_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+  
+  const div = document.createElement("div");
+  div.className = "photo-input-item";
+  div.id = "box_" + inputId;
+  div.innerHTML = '<input type="file" id="' + inputId + '" class="photos form-control" accept="image/*" style="max-width: 180px; overflow: hidden;">';
+  container.appendChild(div);
+
+  const fileInput = div.querySelector("input");
+  fileInput.addEventListener("change", function() {
+    if (this.files && this.files[0]) {
+      createSingleImagePreview(cardId, this.files[0], div.id);
+      div.style.display = "none";
+      appendNewFileInputBox(cardId);
+    }
+  });
+}
+
+function createSingleImagePreview(cardId, fileObj, sourceBoxId) {
+  const cardDiv = document.querySelector('[data-id="' + cardId + '"]');
+  const gallery = cardDiv.querySelector(".preview-container-gallery");
+  const wrapper = document.createElement("div");
+  wrapper.className = "preview-wrapper-new new-image";
+  wrapper.setAttribute("data-sourcebox", sourceBoxId);
+  wrapper.style.position = "relative";
+  wrapper.style.display = "inline-block";
+  
+  const img = document.createElement("img");
+  img.className = "preview-img-new";
+  img.src = URL.createObjectURL(fileObj);
+  img.style.width = "150px";
+  img.style.height = "150px";
+  img.style.objectFit = "cover";
+  img.style.borderRadius = "4px";
+  img.style.border = "1px solid #ddd";
+  
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "btn-remove-img";
+  removeBtn.innerHTML = "&times;";
+  
+  removeBtn.addEventListener("click", function() {
+    wrapper.remove();
+    const originalInputBox = document.getElementById(sourceBoxId);
+    if (originalInputBox) originalInputBox.remove();
+  });
+  
+  wrapper.appendChild(img);
+  wrapper.appendChild(removeBtn);
+  gallery.appendChild(wrapper);
+}
+
+function addCard() {
+  createCard({ number: "", realityCheck: "", comments: "" });
+}
+
+async function submitForm() {
+  const cards = document.querySelectorAll(".card");
+  const saveCards = [];
+  
+  for (const card of cards) {
+    const number = card.querySelector(".number").value.trim();
+    if (!number) continue;
+    
+    const realityCheck = card.querySelector(".reality-check").value.trim();
+    const comments = card.querySelector(".comments").value.trim();
+
+    const fileInputs = card.querySelectorAll(".photo-input-item input[type='file']");
+    const activeFiles = [];
+    fileInputs.forEach(inp => {
+      if (inp.files && inp.files[0]) activeFiles.push(inp.files[0]);
+    });
+
+    const matchedOrig = originalCards.find(c => c.number.trim() === number);
+    if (matchedOrig) {
+      const isRealityEqual = (matchedOrig.realityCheck || "") === realityCheck;
+      const isCommentsEqual = (matchedOrig.comments || "") === comments;
+      
+      if (isRealityEqual && isCommentsEqual && activeFiles.length === 0) {
+        continue; 
+      }
+    }
+
+    let images = [];
+    for (const file of activeFiles) {
+      const base64 = await fileToBase64(file);
+      images.push(base64);
+    }
+    
+    saveCards.push({ number: number, realityCheck: realityCheck, comments: comments, images: images });
+  }
+  
+  if (saveCards.length === 0) {
+    alert("ℹ️ Không có dữ liệu nào thay đổi để cập nhật!");
+    return;
+  }
+  
+  const currentSelectedLocs = [];
+  document.querySelectorAll("#locOptions input:checked").forEach(cb => { currentSelectedLocs.push(cb.value); });
+  let finalLocation = currentSelectedLocs.join(", ");
+  
+  const payload = { location: finalLocation || "", cards: saveCards };
+  
+  google.script.run.withSuccessHandler(function(result) {
+    if (result && result.success) {
+      const toast = document.getElementById("toastMessage");
+      toast.textContent = "🎉 " + result.message;
+      toast.style.display = "block";
+      
+      setTimeout(function() {
+        toast.style.display = "none";
+        
+        document.querySelectorAll("#locOptions input").forEach(cb => {
+          cb.checked = currentSelectedLocs.includes(cb.value);
+        });
+        updateTriggerText(document.getElementById("locTrigger"), document.getElementById("locOptions"), "Select Location");
+        
+        document.getElementById("cardsContainer").innerHTML = "";
+        originalCards = [];
+        loadCardsFromServer(); 
+      }, 2000);
+    } else { alert("⚠️ Có lỗi xảy ra: " + (result && result.message ? result.message : "Thử lại")); }
+  }).saveCards(payload);
+}
+
+function fileToBase64(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
+}
+</script>
+</body>
+</html>
