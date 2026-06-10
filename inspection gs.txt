@@ -1,0 +1,191 @@
+const SHEET_ID = "1Jo8Y1DAoXzTdZMGAk-vP4Vvjok5qJYA-DfgJ2YC1N8M";
+const SHEET_NAME = "Câu trả lời biểu mẫu 2"; // Tên sheet mới theo ảnh của bạn
+const FOLDER_ID = "1-n-EZZ3cFkutbJWXllbAYpjJ6cj1O61CqpTC8scHfovAkQD0IhIeflgMm7RUQ9-fJPpaLBVE";
+
+const HISTORY_DAYS = 100; // ĐÃ SỬA: Giới hạn bộ lọc trong vòng 10 ngày theo yêu cầu
+
+function doGet() {
+  return HtmlService
+    .createHtmlOutputFromFile("index")
+    .setTitle("Inspection Form");
+}
+
+// Lấy danh sách các Room duy nhất từ cột B để làm menu chọn vị trí
+function getInitData() {
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+  const data = sheet.getDataRange().getValues();
+  let locations = [];
+
+  for (let i = 1; i < data.length; i++) {
+    const room = data[i][1] ? String(data[i][1]).trim() : "";
+    // Loại bỏ các giá trị trống hoặc bắt đầu bằng số
+    if (room && isNaN(room.charAt(0))) {
+      locations.push(room);
+    }
+  }
+  return {
+    locations: [...new Set(locations)].sort((a,b) => a.localeCompare(b))
+  };
+}
+
+// Tải dữ liệu các bản ghi cũ trong vòng 10 ngày dựa theo Room được chọn
+function getCards(selectedLocations) {
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+  const data = sheet.getDataRange().getValues();
+  const now = new Date();
+  const cardsMap = {};
+
+  const locsQuery = (selectedLocations || []).map(l => String(l).trim().toLowerCase()).filter(Boolean);
+
+  for (let i = 1; i < data.length; i++) {
+    const roomStr = data[i][1] ? String(data[i][1]).trim() : "";
+    if (locsQuery.length > 0) {
+      if (!locsQuery.includes(roomStr.toLowerCase())) continue;
+    } else { continue; }
+
+    // Kiểm tra bộ lọc thời gian 10 ngày dựa trên cột A (Dấu thời gian)
+    const timestamp = data[i][0];
+    if (!(timestamp instanceof Date)) continue;
+    const diffDays = (now - timestamp) / (1000 * 60 * 60 * 24);
+    if (diffDays > HISTORY_DAYS) continue;
+
+    const numberVal = data[i][2] ? String(data[i][2]).trim() : ""; // Cột C: Number (Description)
+    if (!numberVal) continue;
+
+    const realityCheck = data[i][3] ? String(data[i][3]).trim() : ""; // Cột D: Reality check (System)
+    const comments = data[i][4] ? String(data[i][4]).trim() : "";     // Cột E: Comments (Date)
+
+    // Xử lý hiển thị link ảnh cũ trên giao diện (nếu có)
+    let rowImageUrls = [];
+    if (data[i][5]) {
+      String(data[i][5]).split(",").forEach(url => {
+        let cleanUrl = url.trim();
+        if (cleanUrl) {
+          if (cleanUrl.indexOf("open?id=") > -1) {
+            cleanUrl = cleanUrl.replace("open?id=", "thumbnail?sz=w500&id=");
+          }
+          rowImageUrls.push(cleanUrl);
+        }
+      });
+    }
+
+    // Gộp dữ liệu theo Number (Cột C làm khóa chính phân biệt)
+    if (!cardsMap[numberVal]) {
+      cardsMap[numberVal] = {
+        number: numberVal,
+        realityCheck: realityCheck,
+        comments: comments,
+        imageUrls: rowImageUrls,
+        original: true
+      };
+    } else {
+      // Nếu trùng Number, ưu tiên lấy dữ liệu mới nhất
+      cardsMap[numberVal].realityCheck = realityCheck;
+      cardsMap[numberVal].comments = comments;
+      cardsMap[numberVal].imageUrls = rowImageUrls;
+    }
+  }
+  return Object.values(cardsMap).sort((a,b) => a.number.localeCompare(b.number));
+}
+
+// Lưu dữ liệu cập nhật hoặc thêm mới xuống Google Sheet
+function saveCards(payload) {
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+  const folder = DriveApp.getFolderById(FOLDER_ID);
+
+  const roomLocation = payload.location || "";
+  const cards = payload.cards || [];
+  let savedRows = 0;
+
+  cards.forEach(card => {
+    const number = card.number || "";
+    const realityCheck = card.realityCheck || "";
+    const comments = card.comments || "";
+    const images = card.images || [];
+    
+    const finalImageUrlsList = [];
+
+    // Tải các ảnh mới bổ sung lên Google Drive
+    images.forEach(img => {
+      try {
+        if (!img || !img.includes(",")) return;
+        const matchData = img.match(/^data:(.*);base64,/);
+        const contentType = matchData ? matchData[1] : "image/jpeg";
+        const bytes = Utilities.base64Decode(img.split(",")[1]);
+        const blob = Utilities.newBlob(bytes, contentType, "IMG_" + new Date().getTime() + ".jpg");
+        const file = folder.createFile(blob);
+        
+        // ĐÃ SỬA: Ép cứng link xuất ra sheet chuẩn định dạng open?id= theo yêu cầu số 1
+        finalImageUrlsList.push("https://drive.google.com/open?id=" + file.getId());
+      } catch(err) {
+        Logger.log("Lỗi tải ảnh mới: " + err);
+      }
+    });
+
+    // Chèn dòng dữ liệu mới tương ứng với các cột A, B, C, D, E, F
+    sheet.appendRow([
+      new Date(),                     // Cột A: Dấu thời gian
+      roomLocation,                   // Cột B: Room
+      number,                         // Cột C: Number
+      realityCheck,                   // Cột D: Reality check / Thông số đo được
+      comments,                       // Cột E: Comments
+      finalImageUrlsList.join(", ")   // Cột F: Pic (Chỉ chứa link ảnh mới thêm)
+    ]);
+    savedRows++;
+  });
+
+  SpreadsheetApp.flush(); 
+  return {
+    success: true,
+    rows: savedRows,
+    message: "Dữ liệu Inspection đã được cập nhật thành công!"
+  };
+}
+// Hàm tra cứu giá trị cột C dựa theo mã số nhập vào (so sánh với cột A)
+// Hàm tra cứu giá trị cột C dựa theo mã số (cột A) và tên Sheet động theo Location
+// Hàm tra cứu giá trị cột C dựa theo mã số (cột A) và tìm tên sheet thực tế chứa từ khóa Location
+function lookupDescriptionByNumber(numberVal, locationName) {
+  try {
+    const targetNumber = String(numberVal).trim().toLowerCase();
+    const targetLocationKeyword = String(locationName).trim().toLowerCase();
+    
+    if (!targetNumber) return "Chưa nhập số...";
+    if (!targetLocationKeyword) return "⚠️ Vui lòng chọn Room (Location) trước!";
+    
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const allSheets = ss.getSheets();
+    let sheet = null;
+    let actualSheetName = "";
+    
+    // Thuật toán quét tìm sheet bao gồm từ khóa Location (Ví dụ: keyword "Chiller" sẽ khớp sheet "Copy of chiller")
+    for (let i = 0; i < allSheets.length; i++) {
+      const currentSheetName = allSheets[i].getName();
+      if (currentSheetName.toLowerCase().indexOf(targetLocationKeyword) > -1) {
+        sheet = allSheets[i];
+        actualSheetName = currentSheetName;
+        break;
+      }
+    }
+    
+    if (!sheet) {
+      return "⚠️ Không tìm thấy sheet nào chứa từ khóa: " + locationName;
+    }
+    
+    const data = sheet.getDataRange().getValues();
+    
+    // Duyệt tìm mã số ở Cột A
+    for (let i = 1; i < data.length; i++) {
+      const colA = data[i][0] ? String(data[i][0]).trim().toLowerCase() : "";
+      if (colA === targetNumber) {
+        return data[i][2] ? String(data[i][2]).trim() : "Trống thông tin (Cột C)";
+      }
+    }
+    
+    return "❌ Không tìm thấy mã số " + numberVal + " trong sheet [" + actualSheetName + "]";
+  } catch (err) {
+    Logger.log("Lỗi tra cứu theo sheet chứa từ khóa: " + err);
+    return "⚠️ Lỗi hệ thống tra cứu.";
+  }
+}
+
+
